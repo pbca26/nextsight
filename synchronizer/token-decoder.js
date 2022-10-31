@@ -133,8 +133,8 @@ const verifuint = (value, max) => {
 }
 
 const readPriceUnit = (buffer, offset) => {
-  var a = buffer.readUInt32LE(offset);
-  var b = buffer.readUInt32LE(offset + 4);
+  let a = buffer.readUInt32LE(offset);
+  let b = buffer.readUInt32LE(offset + 4);
   b *= 0x100000000;
   verifuint(b + a, 0x001fffffffffffff);
   return b + a;
@@ -143,8 +143,8 @@ const readPriceUnit = (buffer, offset) => {
 // token create v2 NFT data decoder
 const readV2NftData = (hex) => {
   const nftData = {};
-  let tokenScript = hex;
   const sequenceNumbers = nftV2FieldBytes.map(x => x.sequence);
+  let tokenScript = hex;
   //helpers.log(sequenceNumbers);
   //helpers.log('parse nftv2');
   tokenScript = tokenScript.substr(tokenScript.indexOf(nftByteV2) + nftByteV2.length, tokenScript.length);
@@ -209,7 +209,7 @@ const decodeTokenCreateDetails = (transaction) => {
       // parse token
       let tokenVar;
 
-      for (var i = 0; i < 3; i++) {
+      for (let i = 0; i < 3; i++) {
         tokenVar = readVar(tokenScript);
         tokenScript = tokenVar.hexNext;
         if (tokenVar.varDecoded) tokenDetails[fieldNames[i]] = tokenVar.varDecoded;
@@ -468,7 +468,7 @@ const decodeOpreturn = (transaction, extra) => {
       if (token.funcid === '43') {
         token.type = 'create';
         // parse token
-        var tokenCreateDecoded = decodeTokenCreateDetails(transaction);
+        let tokenCreateDecoded = decodeTokenCreateDetails(transaction);
         //helpers.log('tokenCreateDecoded', tokenCreateDecoded)
         token.create = tokenCreateDecoded;
         token.tokenid = token.txid;
