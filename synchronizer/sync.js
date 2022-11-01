@@ -107,6 +107,7 @@ const syncBlocks = async() => {
           helpers.log(tokenInfo)
           await db.updateTokens(tokenInfo);
           await db.updateTransactions(tx);
+          await updateCIndexKeys(decodedTx.create.owner, null, pubkeyToAddress(decodedTx.create.owner));
           // update db
         }
       } else {
@@ -123,6 +124,21 @@ const syncBlocks = async() => {
   });
 };
 
+const updateCIndexKeys = async (pk, transaction, raddress) => {
+  const ccIndexKey = await rpc.tokenv2indexkey(pk);
+
+  if (ccIndexKey && !ccIndexKey.hasOwnProperty('response')) {
+    await db.updateAddressIndex(ccIndexKey.length === 2 ? {
+      raddress: raddress ? raddress : transaction.inputs[i].address,
+      cindex1: ccIndexKey[0],
+      cindex2: ccIndexKey[1],
+    } : {
+      address: raddress ? raddress : transaction.inputs[i].address,
+      cindex1: ccIndexKey[0],
+    });
+  }
+}
+
 (async() => {
   await db.open();
   const status = await db.getStatus();
@@ -130,5 +146,4 @@ const syncBlocks = async() => {
   helpers.log('status', status)
   syncTip();
   setupTimers();
-  syncBlocks();
 })();
