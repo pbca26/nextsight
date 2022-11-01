@@ -3,6 +3,7 @@ require('dotenv').config({ path: './.env.local' });
 const DB = require('./db');
 const {rpc} = require('./kmd-rpc');
 
+const tokenDecoder = require('./token-decoder');
 const helpers = require('./helpers');
 
 const TIP_SYNC_INTERVAL = 10;
@@ -53,10 +54,81 @@ const setupTimers = () => {
   }, TIP_SYNC_INTERVAL * 1000);
 };
 
+const syncBlocks = async() => {
+  helpers.log(currentBlock, lastBlockChecked)
+  if (currentBlock >= lastBlockChecked && currentBlock !== 0) {
+    const blockhash = await rpc.getblockhash(lastBlockChecked);
+    helpers.log(`processing block ${lastBlockChecked} of ${currentBlock}`);
+    //helpers.log(blockhash)
+    const blockInfo = await rpc.getblock(blockhash);
+    //helpers.log(blockInfo)
+
+    for (let i = 0; i < blockInfo.tx.length; i++) {
+      const txHash = blockInfo.tx[i];
+      //helpers.log('txHash', txHash)
+      const transaction = await rpc.getrawtransaction(txHash, 1);
+      if (!transaction.hasOwnProperty('response')) {
+        //helpers.log(JSON.stringify(transaction, null, 2))
+        const transformedTx = helpers.transformTx(transaction);
+        await extractPKtoRaddress(transformedTx);
+      
+        //helpers.log(JSON.stringify(transformedTx, null, 2));
+      
+        let decodedTx = tokenDecoder.decodeOpreturn(transformedTx);
+        helpers.log(decodedTx)
+      
+        if (decodedTx && decodedTx.hasOwnProperty('create') && helpers.validateCreateTx(decodedTx)) {
+          helpers.log(`create tx at block ${lastBlockChecked}`);
+
+          const tokenInfo = {
+            time: transaction.blocktime || Date.now() / 1000,
+            height: transaction.height || -1,
+            blockhash: transaction.blockhash || -1,
+            name: decodedTx.create.name,
+            description: decodedTx.create.description,
+            owner: decodedTx.create.owner,
+            ownerAddress: decodedTx.create.ownerAddress,
+            supply: decodedTx.create.supply,
+            tokenid: decodedTx.txid,
+            data: decodedTx.create.nftData ? {decoded: decodedTx.create.nftData} : decodedTx.create.nftData,
+          };
+
+          const tx = {
+            to: decodedTx.create.ownerAddress,
+            value: decodedTx.create.supply,
+            height: transaction.height || -1,
+            blockhash: transaction.blockhash || -1,
+            txid: decodedTx.txid,
+            time: transaction.blocktime || Date.now() / 1000,
+            type: 'coinbase',
+            tokenid: decodedTx.tokenid,
+          };
+
+          helpers.log(tokenInfo)
+          await db.updateTokens(tokenInfo);
+          await db.updateTransactions(tx);
+          // update db
+        }
+      } else {
+        helpers.log('error', transaction.response.data);
+      }
+    }
+
+    await db.updateStatus(lastBlockChecked, currentBlock);
+    lastBlockChecked++;
+  }
+
+  setImmediate(() => {
+    syncBlocks();
+  });
+};
+
 (async() => {
   await db.open();
   const status = await db.getStatus();
   lastBlockChecked = status.lastBlockChecked;
   helpers.log('status', status)
   syncTip();
+  setupTimers();
+  syncBlocks();
 })();
