@@ -3,11 +3,14 @@ require('dotenv').config({ path: './.env.local' });
 const DB = require('./db');
 const {rpc} = require('./kmd-rpc');
 
+const {address, crypto} = require('bitgo-utxo-lib');
+
 const tokenDecoder = require('./token-decoder');
 const helpers = require('./helpers');
 
 const TIP_SYNC_INTERVAL = 10;
 const BLOCKS_SYNC_DIFF_THRESHOLD = 100;
+const KMD_PKH = 0x3c;
 
 // TODO: cluster mode
 //   main thread to run blocks sync
@@ -109,6 +112,51 @@ const syncBlocks = async() => {
           await db.updateTransactions(tx);
           await updateCIndexKeys(decodedTx.create.owner, null, pubkeyToAddress(decodedTx.create.owner));
           // update db
+        } else if (decodedTx && (decodedTx.hasOwnProperty('transfer') || decodedTx.hasOwnProperty('order'))) {
+          helpers.log(`transfer/dex tx at block ${lastBlockChecked}`);
+          // await db gettokendata
+          //const tokenInfo = await db.ge
+          const tokenInfo = await db.getTokenInfo(decodedTx.tokenid);
+          helpers.log('loop tokeinfo', tokenInfo)
+          if (tokenInfo.data &&
+              tokenInfo.data.decoded &&
+              tokenInfo.data.decoded.royalty) {
+            helpers.log('royalty', tokenInfo.data.decoded.royalty);
+            decodedTx = tokenDecoder.decodeOpreturn(transaction, {royalty: tokenInfo.data.decoded.royalty});
+          }
+          
+          const tx = {
+            height: transaction.height || -1,
+            blockhash: transaction.blockhash || -1,
+            txid: decodedTx.txid,
+            time: transaction.blocktime || Date.now() / 1000,
+            type: decodedTx.type,
+            tokenid: decodedTx.tokenid,
+          };
+          
+          if (decodedTx.order) {
+            tx.order = decodedTx.order;
+          
+            if (decodedTx.order.royalty) tx.royalty = decodedTx.order.royalty;
+            if (decodedTx.order.price) tx.price = decodedTx.order.price.value;
+          }
+          if (decodedTx.transfer) {
+            if (decodedTx.transfer.from) tx.from = decodedTx.transfer.from;
+            if (decodedTx.transfer.to) tx.to = decodedTx.transfer.to;
+            if (decodedTx.transfer.value) tx.value = decodedTx.transfer.value;
+  
+            if (decodedTx.transfer.burn) tx.burn = true;
+
+            if (decodedTx.transfer.toRaddress) {
+              await db.updateAddressIndex({
+                raddress: decodedTx.transfer.toRaddress,
+                cindex1: decodedTx.transfer.to,
+              });
+            }
+          }
+
+          //if (decodedTx.type === 'fillask') tx.price = decodedTx.order.price.value;
+          await db.updateTransactions(tx);
         }
       } else {
         helpers.log('error', transaction.response.data);
@@ -139,6 +187,18 @@ const updateCIndexKeys = async (pk, transaction, raddress) => {
   }
 }
 
+const extractPKtoRaddress = async transaction => {
+  for (let i = 0; i < transaction.inputs.length; i++) {
+    if (transaction.inputs[i].scriptSig &&
+        transaction.inputs[i].scriptSig.asm &&
+        transaction.inputs[i].scriptSig.asm.indexOf('[ALL] ') > -1 &&
+        transaction.inputs[i].address) {
+      const pk = transaction.inputs[i].scriptSig.asm.substr(transaction.inputs[i].scriptSig.asm.indexOf('[ALL] ') + 6, 66);
+      await updateCIndexKeys(pk, transaction);
+    }
+  }
+}
+
 (async() => {
   await db.open();
   const status = await db.getStatus();
@@ -146,4 +206,5 @@ const updateCIndexKeys = async (pk, transaction, raddress) => {
   helpers.log('status', status)
   syncTip();
   setupTimers();
+  syncBlocks();
 })();
