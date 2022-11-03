@@ -107,7 +107,7 @@ const syncBlocks = async() => {
             tokenid: decodedTx.tokenid,
           };
 
-          helpers.log(tokenInfo)
+          //helpers.log(tokenInfo);
           await db.updateTokens(tokenInfo);
           await db.updateTransactions(tx);
           await updateCIndexKeys(decodedTx.create.owner, null, pubkeyToAddress(decodedTx.create.owner));
@@ -117,7 +117,7 @@ const syncBlocks = async() => {
           // await db gettokendata
           //const tokenInfo = await db.ge
           const tokenInfo = await db.getTokenInfo(decodedTx.tokenid);
-          helpers.log('loop tokeinfo', tokenInfo)
+          //helpers.log('loop tokeinfo', tokenInfo);
           if (tokenInfo.data &&
               tokenInfo.data.decoded &&
               tokenInfo.data.decoded.royalty) {
@@ -199,6 +199,44 @@ const extractPKtoRaddress = async transaction => {
   }
 }
 
+const syncOrders = async () => {
+  const orders = await rpc.tokenv2orders();
+
+  helpers.log(orders);
+
+  await db.updateOrders(orders);
+}
+
+const debugTx = async () => {
+  const txid = 'dcd0ba6ba14c061dc9edcec54f703158aaa7567ff30651bcfdf4eab9bc550491';
+
+  const transaction = await rpc.getrawtransaction(txid, 1);
+  if (!transaction.hasOwnProperty('response')) {
+    //helpers.log(JSON.stringify(transaction, null, 2))
+    const transformedTx = helpers.transformTx(transaction);
+  
+    //helpers.log(JSON.stringify(transformedTx, null, 2));
+  
+    let decodedTx = tokenDecoder.decodeOpreturn(transformedTx);
+    helpers.log(decodedTx)
+  }
+};
+
+const syncTokenOwnerPK = async() => {
+  const tokens = await db.getTokenList();
+
+  for (let i = 0; i < tokens.length; i++) {
+    await updateCIndexKeys(tokens[i].owner, null, pubkeyToAddress(tokens[i].owner));
+  }
+};
+
+const pubkeyToAddress = (pubkey) => {
+  const publicKey = Buffer.from(pubkey, 'hex');
+  const publicKeyHash = crypto.hash160(publicKey);
+
+  return address.toBase58Check(publicKeyHash, KMD_PKH);
+}
+
 (async() => {
   await db.open();
   const status = await db.getStatus();
@@ -207,4 +245,5 @@ const extractPKtoRaddress = async transaction => {
   syncTip();
   setupTimers();
   syncBlocks();
+  syncOrders();
 })();
