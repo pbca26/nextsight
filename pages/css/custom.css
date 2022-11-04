@@ -1,0 +1,183 @@
+/* TODO: merge into overrides.css */
+.navbar-form .form-control {
+  max-width: 250px !important;
+}
+
+.navbar .container {
+  width: 100%;
+}
+
+.token-orders-price {
+  margin-left: 20px;
+}
+
+.token-address-inventory tr td {
+  vertical-align: middle !important;
+}
+
+.coin-dropdown-nohover {
+  pointer-events: none;
+}
+
+.no-bottom-margin {
+  margin-bottom: 0;
+}
+
+.token-list-description {
+  max-height: 50px;
+  overflow: hidden;
+  display: block;
+  text-overflow: ellipsis;
+  word-break: break-all;
+}
+
+.tokens-list-settings {
+  float: right;
+  margin-top: -16px;
+}
+.tokens-list-settings .dropdown-menu {
+  font-size: 12px;
+}
+.tokens-list-settings .dropdown-menu-group {
+  padding: 6px;
+}
+.pagination-bar {
+  padding-bottom: 15px;
+}
+.pagination-bar a {
+  font-size: 10px;
+  cursor: pointer;
+  color: #939393;
+}
+.pagination-bar a:first-child {
+  margin-right: 3px;
+}
+.pagination-bar a:last-child {
+  margin-left: 3px;
+}
+.pagination-bar a.mirror-left i {
+  transform: rotate(180deg);
+  position: relative;
+  top: 2px;
+}
+.pagination-bar a.disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.pagination-bar-label {
+  padding: 0 3px;
+}
+.movement-table td:nth-child(1),
+.movement-table td:nth-child(2),
+.movement-table td:nth-child(3),
+.movement-table td:nth-child(4) {
+  word-break: break-all;
+}
+
+.token-transaction-details-block {
+  font-size: 14px;
+  padding-bottom: 10px;
+}
+
+.token-transaction-details-block > div {
+  padding-bottom: 7px;
+}
+
+.token-transaction-details-block > div span {
+  font-weight: 600;
+}
+
+@media (max-width: 1250px) {
+  .status {
+    display: none !important;
+  }
+  .nav.navbar-nav.navbar-right {
+    float: none !important;
+  }
+}
+
+.game-state-player-table {
+  margin-top: 20px;
+  width: 50%;
+  margin-left: 20px;
+}
+
+.game-state-player-table td {
+  padding-top: 10px;
+}
+
+.card {
+  display: inline-block;
+}
+
+.card-tile {
+  display: inline-block;
+  width: 120px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.card-tile > div {
+  margin-top: 10px;
+}
+
+.c-index-info > span {
+  border: solid 1px #ccc;
+  border-radius: 50%;
+  padding: 0px 4px;
+  margin-left: 5px;
+  cursor: default;
+}
+
+.c-index-info > span:hover + .tooltip {
+  opacity: 1;
+}
+
+.c-index-info .tooltip {
+  opacity: 0;
+  margin-top: -3px;
+  display: inline-block;
+}
+
+.c-index-info .tooltip .tooltip-arrow {
+  left: auto;
+  margin-left: -5px;
+  margin-top: -5px;
+}
+
+.top-logo {
+  padding: 10px !important;
+}
+
+.top-logo > img {
+  border-radius: 50%;
+  height: 40px;
+}
+
+#search {
+  width: calc(400px);
+  max-width: 400px !important;
+}
+
+.status .status-perc {
+  padding-right: 5px;
+}
+
+.status .glyphicon-refresh {
+  margin-right: 5px;
+}
+
+.token-view-tabs a.inactive {
+  cursor: pointer;
+}
+
+.token-view-tabs a.active,
+.token-view-tabs a.active:hover {
+  text-decoration: none;
+  cursor: default;
+  color: #373D42;
+}
+
+.token-view-tabs-spacer {
+  padding: 0 5px;
+}
