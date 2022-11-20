@@ -30,3 +30,21 @@ export const getTokens = (page: number = 1) => {
     }
   });
 }
+
+export const getTokenInfo = (tokenId: string) => {
+  return new Promise(async(resolve, reject) => {
+    const db = await getDbInstance();
+
+    db.collection('tokens')
+      .findOne(
+        {
+          tokenid: tokenId,
+        },
+        {projection:{_id:0}},
+        (err, result) => {
+          if (err) throw err;
+          //log(result);
+          resolve(result);
+        });
+  });
+};
