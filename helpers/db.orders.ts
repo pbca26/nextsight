@@ -4,6 +4,40 @@ import log from './logger';
 
 const MAX_ITEMS_PER_PAGE = 50;
 
+export const getTokenOrders = (tokenId: string, page: number = 1) => {
+  return new Promise(async(resolve, reject) => {
+    const db = await getDbInstance();
+    const docFilter = {
+      tokenid: tokenId
+    };
+
+    log(tokenId);
+
+    const docCount = await db.collection('orders').countDocuments(docFilter);
+
+    log('total orders', docCount);
+    const {total, current} = paginate(docCount, page, MAX_ITEMS_PER_PAGE);
+    log(`from ${(current - 1) * MAX_ITEMS_PER_PAGE} to ${current * MAX_ITEMS_PER_PAGE}`);
+    
+    if (Number(current) !== Number(page)) {
+      resolve([]);
+    } else {
+      db.collection('orders')
+      .find(
+        docFilter,
+        {projection:{_id:0}}
+      )
+      .skip((current - 1) * MAX_ITEMS_PER_PAGE)
+      .limit(MAX_ITEMS_PER_PAGE)
+      .toArray((err, result) => {
+        if (err) throw err;
+        //log(result);
+        resolve(result);
+      });
+    }
+  });
+}
+
 export const getOrders = (page: number = 1) => {
   return new Promise(async(resolve, reject) => {
     const db = await getDbInstance();
@@ -17,8 +51,10 @@ export const getOrders = (page: number = 1) => {
       resolve([]);
     } else {
       db.collection('orders')
-      .find({},
-      {projection:{_id:0}})
+      .find(
+        {},
+        {projection:{_id:0}}
+      )
       .skip((current - 1) * MAX_ITEMS_PER_PAGE)
       .limit(MAX_ITEMS_PER_PAGE)
       .toArray((err, result) => {

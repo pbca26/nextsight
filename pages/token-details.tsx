@@ -5,6 +5,7 @@ import TokenDetailsFixedSupply from './tokenDetailsFixedSupply';
 import TokenDetailsNFT from './tokenDetailsNFT';
 import TokenDetailsTransactions from './tokenDetailsTransactions';
 import TokenDetailsRichlist from './tokenDetailsRichlist';
+import TokenDetailsOrderbook from './tokenDetailsOrderbook';
 import TokenDetailsTrades from './tokenDetailsTrades';
 import log from '../helpers/logger';
 import serverUrl from '../helpers/endpoint';
@@ -74,6 +75,11 @@ export default function TokenDetails(props) {
                 {activeView === 'richlist' &&
                   <div>
                     <TokenDetailsRichlist tokenId={tokenInfo.tokenid} />
+                  </div>
+                }
+                {activeView === 'orderbook' &&
+                  <div>
+                    <TokenDetailsOrderbook tokenId={tokenInfo.tokenid} />
                   </div>
                 }
                 {activeView === 'trades' &&
