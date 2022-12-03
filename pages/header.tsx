@@ -1,4 +1,5 @@
 import Settings from './settings';
+import SearchHeader from './searchHeader';
 import React, { useState, useEffect } from 'react';
 import fetchWrapper from './ui-helpers/fetch';
 import serverUrl from '../helpers/endpoint';
@@ -40,6 +41,9 @@ export default function Header({}) {
                 <a href="/" className="top-logo"><img src="/tokel.png" alt="Logo" /></a>
               </li>
             </ul>
+            <span className="hidden-xs navbar-form navbar-left">
+              <SearchHeader />
+            </span>
             <ul className="nav navbar-nav navbar-right">
               <li>
                 {!isLoading &&

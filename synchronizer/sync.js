@@ -115,7 +115,6 @@ const syncBlocks = async() => {
         } else if (decodedTx && (decodedTx.hasOwnProperty('transfer') || decodedTx.hasOwnProperty('order'))) {
           helpers.log(`transfer/dex tx at block ${lastBlockChecked}`);
           // await db gettokendata
-          //const tokenInfo = await db.ge
           const tokenInfo = await db.getTokenInfo(decodedTx.tokenid);
           //helpers.log('loop tokeinfo', tokenInfo);
           if (tokenInfo.data &&
