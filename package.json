@@ -1,0 +1,25 @@
+{
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@remix-run/router": "^1.0.2",
+    "bitgo-utxo-lib": "^1.8.0",
+    "dotenv": "^16.0.3",
+    "komodo-rpc-js": "^0.0.4",
+    "mongodb": "^4.8.1",
+    "next": "latest",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.4.2",
+    "varuint-bitcoin": "^1.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "18.7.5",
+    "@types/react": "16.9.17",
+    "typescript": "4.6.3"
+  }
+}
