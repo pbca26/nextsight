@@ -65,7 +65,82 @@ const transformTransactionToRaddressType = async(transaction) => {
       transaction.to = raddress;
     }
   }
-};
+}; 
+
+export const getTokenAddressTransactions = (tokenId: string, address: string, page: number = 1) => {
+  return new Promise(async(resolve, reject) => {
+    const db = await getDbInstance();
+    let ccIndex = [address];
+    let docFilter = {
+      tokenid: tokenId,
+      $or: [{
+        to: address,
+      },
+      {
+        from: address,
+      }]
+    };
+
+    if (address[0] === 'R') {
+      const ccIndexRes = await getCCIndexKeys(address);
+      log('R-address');
+
+      if (ccIndexRes) {
+        const {raddress, cindex1, cindex2} = ccIndexRes;
+        ccIndex = [cindex1, cindex2];
+        docFilter = {
+          tokenid: tokenId,
+          $or: [
+            {
+              from: cindex1,  
+            },
+            {
+              to: cindex1,  
+            },
+            {
+              from: cindex2,  
+            },
+            {
+              to: cindex2,  
+            }
+          ]
+        };
+      }
+    }
+
+    log(ccIndex);
+    log('docFilter', docFilter);
+    log(tokenId);
+
+    const docCount = await db.collection('transactions').countDocuments(docFilter);
+
+    log('total txs', docCount);
+    const {total, current} = paginate(docCount, page, MAX_ITEMS_PER_PAGE);
+    log(`from ${(current - 1) * MAX_ITEMS_PER_PAGE} to ${current * MAX_ITEMS_PER_PAGE}`);
+
+    if (Number(current) !== Number(page)) {
+      resolve([]);
+    } else {
+      db.collection('transactions')
+      .find(
+        docFilter,
+        {projection:{_id:0}}
+      )
+      .sort({height: -1})
+      .skip((current - 1) * MAX_ITEMS_PER_PAGE)
+      .limit(MAX_ITEMS_PER_PAGE)
+      .toArray(async(err, result) => {
+        if (err) throw err;
+        //if (address[0] === 'R') {
+          for (let i = 0; i < result.length; i++) {
+            await transformTransactionToRaddressType(result[i]);
+          }
+        //}
+        resolve(result);
+      });
+    }
+  });
+}
 
 export const getTokenDexTransactions = (tokenId: string, page: number = 1) => {
   return new Promise(async(resolve, reject) => {
